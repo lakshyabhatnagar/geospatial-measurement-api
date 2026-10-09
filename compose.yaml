@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - measurements:/app/data
+    environment:
+      GEO_DATA_DIR: /app/data
+    stop_grace_period: 90s
+    restart: unless-stopped
+volumes:
+  measurements:

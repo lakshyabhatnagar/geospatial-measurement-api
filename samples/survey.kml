@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Local survey</name>
+<Folder><name>Parcels</name><Placemark id="parcel-1"><name>Square</name>
+<ExtendedData><Data name="parcel_id"><value>1</value></Data></ExtendedData>
+<Polygon><outerBoundaryIs><LinearRing><coordinates>75.000000000000014,18.088708943127365,0 75.000945094170888,18.088708940812808,0 75.000945099011361,18.089612796463026,0 75.000000000000014,18.089612798777708,0 75.000000000000014,18.088708943127365,0</coordinates></LinearRing></outerBoundaryIs></Polygon>
+</Placemark></Folder><Folder><name>Roads and markers</name>
+<Placemark id="road-1"><name>Road</name><LineString><coordinates>75.000000000000014,18.088708943127365,0 75.002835340602132,18.092324344385812,0</coordinates>
+</LineString></Placemark>
+<Placemark id="marker-1"><name>Survey marker</name>
+<Point><coordinates>75.000000000000014,18.088708943127365,12</coordinates>
+</Point></Placemark>
+</Folder></Document></kml>
