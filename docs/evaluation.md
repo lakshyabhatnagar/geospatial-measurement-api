@@ -16,7 +16,7 @@ This report maps the assignment brief to the implementation and gives an evaluat
 | Document setup, API examples, architecture, flow, CRS, and decisions | Root `README.md` |
 | Explain learning and future scope | “Learning outcomes and future scope” in the README |
 | Public GitHub submission | [github.com/lakshyabhatnagar/geospatial-measurement-api](https://github.com/lakshyabhatnagar/geospatial-measurement-api) |
-| Planned Render deployment | Service name `geospatial-api`; expected URL `https://geospatial-api.onrender.com` if available. The service has not been created yet. |
+| Live Render deployment | [https://geospatial-api-72jz.onrender.com](https://geospatial-api-72jz.onrender.com); readiness, health, docs and end-to-end KML measurement were checked on 2026-10-09. |
 
 ## Run the evaluator walkthrough
 
@@ -30,11 +30,13 @@ curl 'http://127.0.0.1:8000/api/files/FILE_ID/measurements/?limit=50&offset=0'
 
 The sample contains a polygon, a line, and a point across two KML folders. Expected outcomes are three features, two measurements, and one point with `NOT_APPLICABLE` status. `samples/expected.json` records the known reference values. The zipped Shapefile fixtures cover holes, multipart polygons, geographic input, missing CRS metadata, and attribute preservation.
 
-For Render, use the Docker Web Service instructions in the README. After creating the service, verify readiness at `https://geospatial-api.onrender.com/ready/`, then use the same requests with its URL. A persistent disk mounted at `/app/data` is required if uploaded records must survive service restarts and deploys.
+For Render, use the live Docker Web Service at `https://geospatial-api-72jz.onrender.com`. Readiness is available at `/ready/`, and interactive API docs are at `/docs`. A persistent disk mounted at `/app/data` is required if uploaded records must survive service restarts and deploys.
 
 ## Verification evidence
 
-The committed CI workflow runs lint and formatting checks, the API and geometry suite, Alembic migration checks, and a Docker build. The implementation baseline passed [GitHub Actions run 37898907795](https://github.com/lakshyabhatnagar/geospatial-measurement-api/actions/runs/37898907795), which reported 52 passing tests. The Render-specific port and documentation updates in this revision have not yet been deployed; the next push will trigger CI.
+The committed CI workflow runs lint and formatting checks, the API and geometry suite, Alembic migration checks, and a Docker build. The latest verified run passed [GitHub Actions run 37904727364](https://github.com/lakshyabhatnagar/geospatial-measurement-api/actions/runs/37904727364), including 52 passing tests and the Docker build.
+
+The live smoke test returned HTTP 201 for a one-feature KML polygon, then HTTP 200 for its file and measurements lookups. It reported one completed area measurement in EPSG:32619 and no feature errors. This confirms request handling and persistence during the live process; it does not by itself verify that a Render persistent disk is configured or that data survives a redeploy.
 
 An additional manual integration check used the 12-feature Police Districts Shapefile from [Kaggle's Geospatial Learn Course Data](https://www.kaggle.com/datasets/alexisbcook/geospatial-learn-course-data). The API returned `COMPLETED`, measured all 12 polygons, and reported zero feature errors. The source CRS was EPSG:4326 and the selected measurement CRS was EPSG:32619. Independent recalculation in that projected CRS matched the API areas to under 0.001 m². Those downloaded files are kept in the ignored local `data/kaggle/` directory rather than committed; Kaggle reports the source dataset license as unknown.
 

@@ -4,7 +4,7 @@ FastAPI and SQLite API for uploading KML or zipped Shapefiles, preserving featur
 
 **Public repository:** [github.com/lakshyabhatnagar/geospatial-measurement-api](https://github.com/lakshyabhatnagar/geospatial-measurement-api)
 
-**Render deployment:** Not deployed yet. The planned service name is `geospatial-api`, so the expected URL is [https://geospatial-api.onrender.com](https://geospatial-api.onrender.com), subject to that Render subdomain being available when the service is created.
+**Live Render deployment:** [https://geospatial-api-72jz.onrender.com](https://geospatial-api-72jz.onrender.com). The live `/ready/`, `/health/`, and `/docs` endpoints were checked on 2026-10-09. A small KML polygon also completed an end-to-end upload and measurement check.
 
 Uploads finish synchronously. A successful request returns `201 Created`; invalid individual features are retained with issues while the remaining features are processed. The service uses deterministic coordinate rules and does not use an LLM.
 
@@ -34,11 +34,11 @@ The image installs dependencies from `uv.lock`, verifies the Pyogrio runtime's *
 
 ## Deploy on Render
 
-Create a **Docker Web Service** from this repository's `main` branch and name it `geospatial-api`. The expected public URL is `https://geospatial-api.onrender.com` if Render confirms the name is available. The Dockerfile listens on Render's `PORT` environment variable (Render's default is `10000`) and serves `GET /ready/` as its readiness check. Use `/ready/` as the Render health-check path. The container applies Alembic migrations before starting FastAPI.
+The live **Docker Web Service** is at [https://geospatial-api-72jz.onrender.com](https://geospatial-api-72jz.onrender.com). Render assigned this hostname, including the `-72jz` suffix; use the exact deployed URL for API requests. The Dockerfile listens on Render's `PORT` environment variable (Render's default is `10000`) and serves `GET /ready/` as its readiness check. Use `/ready/` as the Render health-check path. The container applies Alembic migrations before starting FastAPI.
 
-Set `GEO_DATA_DIR=/app/data` in the service environment, then attach a persistent disk with mount path `/app/data`. SQLite, its WAL files, the instance lock, and temporary uploads all live under this directory. Without the disk, Render's filesystem is ephemeral and uploaded results can be lost on restarts, spin-downs, or deploys. Render currently requires a paid web-service plan for persistent disks; free services cannot attach one. A disk-backed service cannot scale to multiple instances, which matches this application's one-process SQLite design. Disk-backed deployments also do not use Render's zero-downtime deploy behavior. See [Render persistent disks](https://render.com/docs/disks), [free service limitations](https://render.com/docs/free), and [web service port binding](https://render.com/docs/web-services).
+Set `GEO_DATA_DIR=/app/data` in the service environment and attach a persistent disk with mount path `/app/data` if uploaded records must survive restarts and deploys. SQLite, its WAL files, the instance lock, and temporary uploads all live under this directory. Without the disk, Render's filesystem is ephemeral and uploaded results can be lost on restarts, spin-downs, or deploys. Render currently requires a paid web-service plan for persistent disks; free services cannot attach one. A disk-backed service cannot scale to multiple instances, which matches this application's one-process SQLite design. Disk-backed deployments also do not use Render's zero-downtime deploy behavior. See [Render persistent disks](https://render.com/docs/disks), [free service limitations](https://render.com/docs/free), and [web service port binding](https://render.com/docs/web-services).
 
-Keep one instance and one Uvicorn worker. After deployment, check `https://geospatial-api.onrender.com/ready/`, open `/docs`, and upload one of the sample files. If the service name is unavailable, Render will require a different name and the URL will change accordingly.
+Keep one instance and one Uvicorn worker. Check [live readiness](https://geospatial-api-72jz.onrender.com/ready/), [interactive API docs](https://geospatial-api-72jz.onrender.com/docs), and [health](https://geospatial-api-72jz.onrender.com/health/). The upload and measurement endpoints are available on this same host.
 
 ## Requests and responses
 
