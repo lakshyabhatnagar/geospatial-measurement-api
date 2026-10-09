@@ -15,5 +15,5 @@ RUN uv sync --frozen --no-dev && \
 USER geo
 EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
-    CMD-SHELL python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:'+os.getenv('PORT','10000')+'/ready/',timeout=3)"
+    CMD ["python", "-c", "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:'+os.getenv('PORT','10000')+'/ready/',timeout=3)"]
 CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-10000}\" --workers 1"]
