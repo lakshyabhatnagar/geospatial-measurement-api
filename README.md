@@ -2,6 +2,10 @@
 
 FastAPI and SQLite API for uploading KML or zipped Shapefiles, preserving feature attributes and geometry, and measuring local survey polygons and lines in a suitable projected CRS.
 
+**Public repository:** [github.com/lakshyabhatnagar/geospatial-measurement-api](https://github.com/lakshyabhatnagar/geospatial-measurement-api)
+
+**Render deployment:** Not deployed yet. The planned service name is `geospatial-api`, so the expected URL is [https://geospatial-api.onrender.com](https://geospatial-api.onrender.com), subject to that Render subdomain being available when the service is created.
+
 Uploads finish synchronously. A successful request returns `201 Created`; invalid individual features are retained with issues while the remaining features are processed. The service uses deterministic coordinate rules and does not use an LLM.
 
 ## Run locally
@@ -27,6 +31,14 @@ docker compose logs -f api
 ```
 
 The image installs dependencies from `uv.lock`, verifies the Pyogrio runtime's **ESRI Shapefile and LIBKML** drivers during build and startup, applies migrations, and starts one Uvicorn worker as an unprivileged user. Compose binds to localhost and persists SQLite in the `measurements` volume. `docker compose down` preserves the volume. The image targets the Linux runtime; driver availability is checked rather than inferred from system GDAL installation.
+
+## Deploy on Render
+
+Create a **Docker Web Service** from this repository's `main` branch and name it `geospatial-api`. The expected public URL is `https://geospatial-api.onrender.com` if Render confirms the name is available. The Dockerfile listens on Render's `PORT` environment variable (Render's default is `10000`) and serves `GET /ready/` as its readiness check. Use `/ready/` as the Render health-check path. The container applies Alembic migrations before starting FastAPI.
+
+Set `GEO_DATA_DIR=/app/data` in the service environment, then attach a persistent disk with mount path `/app/data`. SQLite, its WAL files, the instance lock, and temporary uploads all live under this directory. Without the disk, Render's filesystem is ephemeral and uploaded results can be lost on restarts, spin-downs, or deploys. Render currently requires a paid web-service plan for persistent disks; free services cannot attach one. A disk-backed service cannot scale to multiple instances, which matches this application's one-process SQLite design. Disk-backed deployments also do not use Render's zero-downtime deploy behavior. See [Render persistent disks](https://render.com/docs/disks), [free service limitations](https://render.com/docs/free), and [web service port binding](https://render.com/docs/web-services).
+
+Keep one instance and one Uvicorn worker. After deployment, check `https://geospatial-api.onrender.com/ready/`, open `/docs`, and upload one of the sample files. If the service name is unavailable, Render will require a different name and the URL will change accordingly.
 
 ## Requests and responses
 
@@ -186,3 +198,11 @@ Tests cover API contracts, KML layers, CRS conflicts/missing metadata, feet/cust
 Approach A keeps the submission runnable with one service and one database while making correctness and failures reviewable. SQLite is suitable for the single writer policy. Separate ingestion, CRS and measurement functions leave a clear path to workers or PostGIS without changing public feature semantics.
 
 The main engineering lessons are that coordinate units alone do not establish measurement suitability, file parsing can fail before individual geometry decoding, thread offloading is not durable job execution, and CRS metadata must remain distinct from both output and measurement CRS. [Architecture notes](docs/architecture.md) explain Approaches B/C and their failure handling.
+
+See [evaluation notes](docs/evaluation.md) for a requirement-by-requirement checklist, reproducible evaluator steps, known limits, and CI evidence.
+
+## Learning outcomes and future scope
+
+This implementation demonstrates how to keep source, output, and measurement CRS separate; how to select a local projected CRS deterministically; how to preserve per-feature failures without losing valid results; and how to publish a complete upload atomically in SQLite. It also distinguishes thread offloading from durable job processing and records why a file reader can fail at layer scope before individual geometries are available.
+
+Future work includes durable background jobs with PostgreSQL and object storage, PostGIS-backed spatial search, request authentication and ownership, upload idempotency, richer KML presentation support, configurable geodesic measurement methods, and performance benchmarks for larger surveys. The detailed alternatives and their failure recovery are in [architecture notes](docs/architecture.md).

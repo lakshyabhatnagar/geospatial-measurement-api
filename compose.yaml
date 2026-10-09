@@ -7,6 +7,7 @@ services:
       - measurements:/app/data
     environment:
       GEO_DATA_DIR: /app/data
+      PORT: "8000"
     stop_grace_period: 90s
     restart: unless-stopped
 volumes:
